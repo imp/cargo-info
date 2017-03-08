@@ -192,11 +192,24 @@ fn main() {
                 .short("r")
                 .long("repository")
                 .help("Report crate repository URL"))
+            .arg(Arg::with_name("updated")
+                .short("u")
+                .long("updated")
+                .help("Report new and recently updates crates")
+                .conflicts_with_all(&["documentation",
+                                      "downloads",
+                                      "homepage",
+                                      "repository",
+                                      "json"]))
             .arg(Arg::with_name("json")
                 .short("j")
                 .long("json")
                 .help("Report raw JSON data from crates.io")
-                .conflicts_with_all(&["documentation", "downloads", "homepage", "repository"]))
+                .conflicts_with_all(&["documentation",
+                                      "downloads",
+                                      "homepage",
+                                      "repository",
+                                      "updated"]))
             .arg(Arg::with_name("verbose")
                 .short("v")
                 .long("verbose")
