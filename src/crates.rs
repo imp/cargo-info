@@ -233,10 +233,8 @@ impl fmt::Display for Crate {
         let created_at = TimeStamp::from(&self.krate["created_at"]);
         let updated_at = TimeStamp::from(&self.krate["updated_at"]);
 
-        let keywords = self.krate["keywords"]
-            .members()
-            .filter_map(|jv| jv.as_str())
-            .collect::<Vec<_>>();
+        let keywords =
+            self.krate["keywords"].members().filter_map(|jv| jv.as_str()).collect::<Vec<_>>();
 
         if f.alternate() {
             write!(f,
