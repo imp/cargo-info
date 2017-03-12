@@ -4,23 +4,24 @@ extern crate chrono;
 extern crate chrono_humanize;
 #[macro_use]
 extern crate error_chain;
-extern crate json;
-extern crate requests;
+extern crate libcratesio;
 extern crate pager;
+
+use std::fmt;
 
 use clap::{App, SubCommand, Arg, AppSettings, ArgMatches};
 use pager::Pager;
-use requests::{Request, Response, ToJson};
-use std::fmt;
+use libcratesio::{CratesIO, Crate};
+
+use errors::*;
+use crates::PrintCrateInfo;
 
 mod crates;
 mod errors;
 
-use errors::*;
+const CARGO: &str = "cargo";
 
-const CARGO: &'static str = "cargo";
-
-#[derive(Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq)]
 enum Flag {
     Repository,
     Documentation,
@@ -29,7 +30,7 @@ enum Flag {
     Default,
 }
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 struct Report {
     flags: Vec<Flag>,
     verbose: bool,
@@ -75,12 +76,12 @@ impl Report {
     }
 
     pub fn report(&self, name: &str) -> Result<String> {
-        let response = try!(query(name));
+        let response = CratesIO::query(name).chain_err(|| "crates.io query failed")?;
         let mut output = String::new();
 
         if self.json {
             output = output + &self.report_json(&response);
-        } else if let Some(krate) = get_crate(&response) {
+        } else if let Ok(krate) = Crate::from_apiresponse(&response.as_data()?) {
             if self.versions > 0 {
                 output = output + &self.report_versions(&krate, self.versions);
             } else if self.keywords {
@@ -92,19 +93,18 @@ impl Report {
         Ok(output)
     }
 
-    pub fn report_json(&self, response: &Response) -> String {
-        let mut output = String::new();
+    pub fn report_json(&self, response: &CratesIO) -> String {
         if self.verbose {
-            if let Ok(json) = response.json() {
-                output = output + &format!("{:#}", json);
+            match response.as_json() {
+                Ok(json) => format!("{:#}", json),
+                _ => String::new()
             }
-        } else if let Some(json) = response.text() {
-            output = output + json;
+        } else {
+            format!("{}", response.raw_data())
         }
-        output
     }
 
-    pub fn report_crate(&self, krate: &crates::Crate) -> String {
+    pub fn report_crate(&self, krate: &Crate) -> String {
         let mut output = String::new();
         for flag in &self.flags {
             output = output +
@@ -113,13 +113,13 @@ impl Report {
                           Flag::Documentation => krate.print_documentation(self.verbose),
                           Flag::Downloads => krate.print_downloads(self.verbose),
                           Flag::Homepage => krate.print_homepage(self.verbose),
-                          Flag::Default => reportv(krate, self.verbose),
+                          Flag::Default => krate.print_default(self.verbose),
                       }
         }
         output
     }
 
-    pub fn report_versions(&self, krate: &crates::Crate, limit: usize) -> String {
+    pub fn report_versions(&self, krate: &Crate, limit: usize) -> String {
         if limit > 0 {
             krate.print_last_versions(limit, self.verbose)
         } else {
@@ -127,25 +127,9 @@ impl Report {
         }
     }
 
-    pub fn report_keywords(&self, krate: &crates::Crate) -> String {
+    pub fn report_keywords(&self, krate: &Crate) -> String {
         krate.print_keywords(self.verbose)
     }
-}
-
-fn reportv(krate: &crates::Crate, verbose: bool) -> String {
-    if verbose {
-        format!("{:#}", krate)
-    } else {
-        format!("{}", krate)
-    }
-}
-
-fn query(krate: &str) -> requests::Result {
-    Request::json().get(&format!("https://crates.io/api/v1/crates/{}", krate))
-}
-
-fn get_crate(response: &Response) -> Option<crates::Crate> {
-    response.json().ok().map(|k| crates::Crate::new(&k))
 }
 
 // fn debug<T>(item: &T)

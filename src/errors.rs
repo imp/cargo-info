@@ -1,7 +1,7 @@
-use requests;
+use libcratesio;
 
 error_chain! {
     foreign_links {
-        Requests(requests::Error);
+        CratesIO(libcratesio::Error);
     }
 }
