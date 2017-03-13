@@ -101,7 +101,7 @@ impl Report {
                 _ => String::new(),
             }
         } else {
-            format!("{}", response.raw_data())
+            response.raw_data().to_owned()
         }
     }
 
