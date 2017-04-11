@@ -76,7 +76,8 @@ impl Report {
     }
 
     pub fn report(&self, name: &str) -> Result<String> {
-        let response = CratesIO::query(name).chain_err(|| "crates.io query failed")?;
+        let response = CratesIO::query(name)
+            .chain_err(|| "crates.io query failed")?;
         let mut output = String::new();
 
         if self.json {
@@ -97,7 +98,7 @@ impl Report {
         if self.verbose {
             match response.as_json() {
                 Ok(json) => format!("{:#}", json),
-                _ => String::new()
+                _ => String::new(),
             }
         } else {
             format!("{}", response.raw_data())
@@ -109,12 +110,12 @@ impl Report {
         for flag in &self.flags {
             output = output +
                      &match *flag {
-                          Flag::Repository => krate.print_repository(self.verbose),
-                          Flag::Documentation => krate.print_documentation(self.verbose),
-                          Flag::Downloads => krate.print_downloads(self.verbose),
-                          Flag::Homepage => krate.print_homepage(self.verbose),
-                          Flag::Default => krate.print_default(self.verbose),
-                      }
+                         Flag::Repository => krate.print_repository(self.verbose),
+                         Flag::Documentation => krate.print_documentation(self.verbose),
+                         Flag::Downloads => krate.print_downloads(self.verbose),
+                         Flag::Homepage => krate.print_homepage(self.verbose),
+                         Flag::Default => krate.print_default(self.verbose),
+                     }
         }
         output
     }
