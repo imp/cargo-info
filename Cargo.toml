@@ -17,7 +17,7 @@ gitlab = { repository = "imp/cargo-info" }
 chrono = "0.4"
 chrono-humanize = "0.0.10"
 error-chain = "0.11"
-libcratesio = "0.0.2"
+libcratesio = "0.0.3"
 pager = "0.13"
 
 [dependencies.clap]
