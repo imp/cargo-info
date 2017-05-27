@@ -202,8 +202,7 @@ fn main() {
                 .short("s")
                 .long("summary")
                 .help("Report the crates.io summary information")
-                .conflicts_with_all(&["crate",
-                                      "documentation",
+                .conflicts_with_all(&["documentation",
                                       "downloads",
                                       "homepage",
                                       "repository"]))
