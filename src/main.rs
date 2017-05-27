@@ -176,7 +176,6 @@ fn main() {
         .setting(AppSettings::SubcommandRequiredElseHelp)
         .subcommand(SubCommand::with_name("info")
             .setting(AppSettings::ArgRequiredElseHelp)
-            .setting(AppSettings::TrailingVarArg)
             .arg(Arg::with_name("documentation")
                 .short("d")
                 .long("documentation")
