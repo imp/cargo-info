@@ -1,7 +1,8 @@
-#[macro_use]
-extern crate clap;
+
 extern crate chrono;
 extern crate chrono_humanize;
+#[macro_use]
+extern crate clap;
 #[macro_use]
 extern crate error_chain;
 extern crate libcratesio;
@@ -9,9 +10,9 @@ extern crate pager;
 
 use std::fmt;
 
-use clap::{App, SubCommand, Arg, AppSettings, ArgMatches};
+use clap::{App, AppSettings, Arg, ArgMatches, SubCommand};
 use pager::Pager;
-use libcratesio::{CratesIO, Crate};
+use libcratesio::{Crate, CratesIO};
 
 use errors::*;
 use crates::PrintCrateInfo;
@@ -41,7 +42,6 @@ struct Report {
 
 impl Report {
     pub fn new(info: &ArgMatches) -> Self {
-
         let mut flags: Vec<Flag> = vec![];
         if info.is_present("repository") {
             flags.push(Flag::Repository);
@@ -61,8 +61,8 @@ impl Report {
         }
 
         let versions = match info.occurrences_of("versions") {
-            0 => 0, // No flags - nothing to do
-            1 => 5, // Single -V - show 5 last versions
+            0 => 0,                  // No flags - nothing to do
+            1 => 5,                  // Single -V - show 5 last versions
             _ => usize::max_value(), // All the other cases - show everything
         };
 
@@ -76,8 +76,7 @@ impl Report {
     }
 
     pub fn report(&self, name: &str) -> Result<String> {
-        let response = CratesIO::query(name)
-            .chain_err(|| "crates.io query failed")?;
+        let response = CratesIO::query(name).chain_err(|| "crates.io query failed")?;
         let mut output = String::new();
 
         if self.json {
@@ -108,14 +107,13 @@ impl Report {
     pub fn report_crate(&self, krate: &Crate) -> String {
         let mut output = String::new();
         for flag in &self.flags {
-            output = output +
-                     &match *flag {
-                         Flag::Repository => krate.print_repository(self.verbose),
-                         Flag::Documentation => krate.print_documentation(self.verbose),
-                         Flag::Downloads => krate.print_downloads(self.verbose),
-                         Flag::Homepage => krate.print_homepage(self.verbose),
-                         Flag::Default => krate.print_default(self.verbose),
-                     }
+            output = output + &match *flag {
+                Flag::Repository => krate.print_repository(self.verbose),
+                Flag::Documentation => krate.print_documentation(self.verbose),
+                Flag::Downloads => krate.print_downloads(self.verbose),
+                Flag::Homepage => krate.print_homepage(self.verbose),
+                Flag::Default => krate.print_default(self.verbose),
+            }
         }
         output
     }
@@ -140,7 +138,8 @@ impl Report {
 // }
 
 fn print_report<T>(r: Result<T>)
-    where T: fmt::Display
+where
+    T: fmt::Display,
 {
     match r {
         Ok(text) => println!("\n{}\n", text),
@@ -149,7 +148,6 @@ fn print_report<T>(r: Result<T>)
 }
 
 fn main() {
-
     Pager::new().setup();
 
     let matches = App::new(CARGO)
@@ -160,54 +158,78 @@ fn main() {
         .setting(AppSettings::GlobalVersion)
         .setting(AppSettings::VersionlessSubcommands)
         .setting(AppSettings::SubcommandRequiredElseHelp)
-        .subcommand(SubCommand::with_name("info")
-            .setting(AppSettings::ArgRequiredElseHelp)
-            .setting(AppSettings::TrailingVarArg)
-            .arg(Arg::with_name("documentation")
-                .short("d")
-                .long("documentation")
-                .help("Report documentation URL"))
-            .arg(Arg::with_name("downloads")
-                .short("D")
-                .long("downloads")
-                .help("Report number of crate downloads"))
-            .arg(Arg::with_name("homepage")
-                .short("H")
-                .long("homepage")
-                .help("Report home page URL"))
-            .arg(Arg::with_name("repository")
-                .short("r")
-                .long("repository")
-                .help("Report crate repository URL"))
-            .arg(Arg::with_name("updated")
-                .short("u")
-                .long("updated")
-                .help("Report new and recently updates crates")
-                .conflicts_with_all(&["documentation",
-                                      "downloads",
-                                      "homepage",
-                                      "repository",
-                                      "json"]))
-            .arg(Arg::with_name("json")
-                .short("j")
-                .long("json")
-                .help("Report raw JSON data from crates.io")
-                .conflicts_with_all(&["documentation",
-                                      "downloads",
-                                      "homepage",
-                                      "repository",
-                                      "updated"]))
-            .arg(Arg::with_name("verbose")
-                .short("v")
-                .long("verbose")
-                .help("Report more details"))
-            .arg(Arg::with_name("versions")
-                .short("V")
-                .long("versions")
-                .multiple(true)
-                .help("Report version history of the crate (5 last versions), twice for full \
-                       history"))
-            .arg_from_usage("<crate>... 'crate to query'"))
+        .subcommand(
+            SubCommand::with_name("info")
+                .setting(AppSettings::ArgRequiredElseHelp)
+                .setting(AppSettings::TrailingVarArg)
+                .arg(
+                    Arg::with_name("documentation")
+                        .short("d")
+                        .long("documentation")
+                        .help("Report documentation URL"),
+                )
+                .arg(
+                    Arg::with_name("downloads")
+                        .short("D")
+                        .long("downloads")
+                        .help("Report number of crate downloads"),
+                )
+                .arg(
+                    Arg::with_name("homepage")
+                        .short("H")
+                        .long("homepage")
+                        .help("Report home page URL"),
+                )
+                .arg(
+                    Arg::with_name("repository")
+                        .short("r")
+                        .long("repository")
+                        .help("Report crate repository URL"),
+                )
+                .arg(
+                    Arg::with_name("updated")
+                        .short("u")
+                        .long("updated")
+                        .help("Report new and recently updates crates")
+                        .conflicts_with_all(&[
+                            "documentation",
+                            "downloads",
+                            "homepage",
+                            "repository",
+                            "json",
+                        ]),
+                )
+                .arg(
+                    Arg::with_name("json")
+                        .short("j")
+                        .long("json")
+                        .help("Report raw JSON data from crates.io")
+                        .conflicts_with_all(&[
+                            "documentation",
+                            "downloads",
+                            "homepage",
+                            "repository",
+                            "updated",
+                        ]),
+                )
+                .arg(
+                    Arg::with_name("verbose")
+                        .short("v")
+                        .long("verbose")
+                        .help("Report more details"),
+                )
+                .arg(
+                    Arg::with_name("versions")
+                        .short("V")
+                        .long("versions")
+                        .multiple(true)
+                        .help(
+                            "Report version history of the crate (5 last versions), twice for full \
+                             history",
+                        ),
+                )
+                .arg_from_usage("<crate>... 'crate to query'"),
+        )
         .get_matches();
 
     if let Some(info) = matches.subcommand_matches("info") {

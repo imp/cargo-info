@@ -133,18 +133,20 @@ impl PrintCrateInfo for Crate {
         let license = TextOption(&self.license);
 
         if verbose {
-            format!("{}\n{}\n{}\n{}\n{}\n{}\n{}\n{}\n{}\n{}\n{}",
-                    format_args!("{:<16}{}", "Crate:", self.name),
-                    format_args!("{:<16}{}", "Version:", self.max_version),
-                    format_args!("{:<16}{}", "Description:", description),
-                    format_args!("{:<16}{}", "Downloads:", self.downloads),
-                    format_args!("{:<16}{}", "Homepage:", homepage),
-                    format_args!("{:<16}{}", "Documentation:", documentation),
-                    format_args!("{:<16}{}", "Repository:", repository),
-                    format_args!("{:<16}{}", "License:", license),
-                    format_args!("{:<16}{}", "Keywords:", keywords),
-                    format_args!("{:<16}{}  ({:#})", "Created at:", created_at, created_at),
-                    format_args!("{:<16}{}  ({:#})", "Updated at:", updated_at, updated_at))
+            format!(
+                "{}\n{}\n{}\n{}\n{}\n{}\n{}\n{}\n{}\n{}\n{}",
+                format_args!("{:<16}{}", "Crate:", self.name),
+                format_args!("{:<16}{}", "Version:", self.max_version),
+                format_args!("{:<16}{}", "Description:", description),
+                format_args!("{:<16}{}", "Downloads:", self.downloads),
+                format_args!("{:<16}{}", "Homepage:", homepage),
+                format_args!("{:<16}{}", "Documentation:", documentation),
+                format_args!("{:<16}{}", "Repository:", repository),
+                format_args!("{:<16}{}", "License:", license),
+                format_args!("{:<16}{}", "Keywords:", keywords),
+                format_args!("{:<16}{}  ({:#})", "Created at:", created_at, created_at),
+                format_args!("{:<16}{}  ({:#})", "Updated at:", updated_at, updated_at)
+            )
         } else {
             let mut versions = String::new();
             for line in self.print_last_versions(5, false).lines() {
@@ -154,16 +156,18 @@ impl PrintCrateInfo for Crate {
                 }
             }
 
-            format!("{}\n{}\n{}\n{}\n{}\n{}\n{}\n{}\n{}",
-                    format_args!("{:<16}{}", "Crate:", self.name),
-                    format_args!("{:<16}{}", "Version:", self.max_version),
-                    format_args!("{:<16}{}", "Description:", description),
-                    format_args!("{:<16}{}", "Downloads:", self.downloads),
-                    format_args!("{:<16}{}", "Homepage:", homepage),
-                    format_args!("{:<16}{}", "Documentation:", documentation),
-                    format_args!("{:<16}{}", "Repository:", repository),
-                    format_args!("{:<16}{:#}", "Last updated:", updated_at),
-                    format_args!("{:<16}\n{}", "Version history:", versions))
+            format!(
+                "{}\n{}\n{}\n{}\n{}\n{}\n{}\n{}\n{}",
+                format_args!("{:<16}{}", "Crate:", self.name),
+                format_args!("{:<16}{}", "Version:", self.max_version),
+                format_args!("{:<16}{}", "Description:", description),
+                format_args!("{:<16}{}", "Downloads:", self.downloads),
+                format_args!("{:<16}{}", "Homepage:", homepage),
+                format_args!("{:<16}{}", "Documentation:", documentation),
+                format_args!("{:<16}{}", "Repository:", repository),
+                format_args!("{:<16}{:#}", "Last updated:", updated_at),
+                format_args!("{:<16}\n{}", "Version history:", versions)
+            )
         }
     }
 }
