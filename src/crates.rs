@@ -41,7 +41,7 @@ fn print_version(v: &Version, verbose: bool) -> String {
     let mut output = format!("{:<11}{:<#16}{:<11}", v.num, created_at, v.downloads);
 
     if v.yanked {
-        output = output + "\t\t(yanked)";
+        output += "\t\t(yanked)";
     }
 
     if verbose {
@@ -111,7 +111,8 @@ impl PrintCrateInfo for Crate {
     }
 
     fn print_keywords(&self, verbose: bool) -> String {
-        let keywords = "";
+        // let keywords = "";
+        let keywords = self.keywords.join(", ");
         if verbose {
             format!("{:#}", keywords)
         } else {
@@ -123,7 +124,7 @@ impl PrintCrateInfo for Crate {
         let created_at = TimeStamp(self.created_at);
         let updated_at = TimeStamp(self.updated_at);
 
-        let keywords = String::new();
+        let keywords = self.keywords.join(", ");
         // self.krate["keywords"].members().filter_map(|jv| jv.as_str()).collect::<Vec<_>>();
         let description = TextOption(&self.description);
         let homepage = TextOption(&self.homepage);
@@ -141,13 +142,13 @@ impl PrintCrateInfo for Crate {
                     format_args!("{:<16}{}", "Documentation:", documentation),
                     format_args!("{:<16}{}", "Repository:", repository),
                     format_args!("{:<16}{}", "License:", license),
-                    format_args!("{:<16}{:?}", "Keywords:", keywords),
+                    format_args!("{:<16}{}", "Keywords:", keywords),
                     format_args!("{:<16}{}  ({:#})", "Created at:", created_at, created_at),
                     format_args!("{:<16}{}  ({:#})", "Updated at:", updated_at, updated_at))
         } else {
             let mut versions = String::new();
             for line in self.print_last_versions(5, false).lines() {
-                versions = versions + "\n";
+                versions += "\n";
                 if !line.is_empty() {
                     versions = versions + "  " + line;
                 }
