@@ -1,10 +1,10 @@
 use std::fmt;
 
-use chrono::{DateTime, UTC};
+use chrono::{DateTime, Utc};
 use chrono_humanize::HumanTime;
 use libcratesio::{Crate, Version};
 
-struct TimeStamp(DateTime<UTC>);
+struct TimeStamp(DateTime<Utc>);
 
 impl fmt::Display for TimeStamp {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
