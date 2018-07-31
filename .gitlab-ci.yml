@@ -7,15 +7,15 @@ stages:
   - test
   - deploy
 
-stable:cargo:
+cargo:stable:
   image: rustdocker/rust:stable
   <<: *cargo_test
 
-beta:cargo:
+cargo:beta:
   image: rustdocker/rust:beta
   <<: *cargo_test
 
-nightly:cargo:
+cargo:nightly:
   image: rustdocker/rust:nightly
   <<: *cargo_test
 
