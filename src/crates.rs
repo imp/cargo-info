@@ -23,7 +23,7 @@ pub(super) trait CrateResponseExt {
 pub(super) struct TimeStamp(DateTime<Utc>);
 
 impl fmt::Display for TimeStamp {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         if f.alternate() {
             f.pad(&format!("{}", HumanTime::from(self.0)))
         } else {
