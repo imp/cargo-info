@@ -1,3 +1,7 @@
+## 0.6.0 - 2022-04-28
+
+Rewrite of the entire codebase
+
 ## 0.5.14 - 2017-07-31
 
 Pull up dependencies

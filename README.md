@@ -1,9 +1,10 @@
 # cargo-info
+
 Query crates.io for crates details
 
 Build status
 
  branch | status
 :-------|:------:
-  master| [![Build Status](https://gitlab.com/imp/cargo-info/badges/master/build.svg)](https://gitlab.com/imp/cargo-info/pipelines?scope=branches)
- develop| [![Build Status](https://gitlab.com/imp/cargo-info/badges/develop/build.svg)](https://gitlab.com/imp/cargo-info/pipelines?scope=branches)
+  main  | [![pipeline status](https://gitlab.com/imp/cargo-info/badges/main/pipeline.svg)](https://gitlab.com/imp/cargo-info/-/commits/main)
+ develop| [![pipeline status](https://gitlab.com/imp/cargo-info/badges/develop/pipeline.svg)](https://gitlab.com/imp/cargo-info/-/commits/develop)
