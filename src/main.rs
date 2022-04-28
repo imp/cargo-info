@@ -10,7 +10,6 @@ mod crates;
 
 fn main() -> anyhow::Result<()> {
     let cli = Cli::parse();
-    println!("{cli:?}");
     match cli.info {
         Info::Info { report } => report.report(),
     }
