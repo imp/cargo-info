@@ -1,6 +1,6 @@
 [package]
 name = "cargo-info"
-version = "0.6.0"
+version = "0.6.1"
 authors = ["Cyril Plisko <cyril.plisko@mountall.com>"]
 categories = ["development-tools::cargo-plugins"]
 description = "Extends cargo to query crates.io registry for crates details"
