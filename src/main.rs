@@ -1,221 +1,180 @@
-#[macro_use]
-extern crate clap;
-extern crate chrono;
-extern crate chrono_humanize;
-#[macro_use]
-extern crate failure;
-extern crate json;
-extern crate pager;
-extern crate requests;
+use std::time::Duration;
 
-use clap::{App, AppSettings, Arg, ArgMatches, SubCommand};
-use pager::Pager;
-use requests::{Request, Response, ToJson};
-use std::fmt;
+use chrono_humanize::HumanTime;
+use clap::{Parser, Subcommand};
+use crates_io_api::{CrateResponse, SyncClient, Version};
+
+use crates::CrateResponseExt;
 
 mod crates;
-mod errors;
 
-const CARGO: &str = "cargo";
-
-#[derive(Debug, PartialEq)]
-enum Flag {
-    Repository,
-    Documentation,
-    Downloads,
-    Homepage,
-    Default,
+fn main() -> anyhow::Result<()> {
+    let cli = Cli::parse();
+    println!("{cli:?}");
+    match cli.info {
+        Info::Info { report } => report.report(),
+    }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Parser)]
+struct Cli {
+    #[clap(subcommand)]
+    info: Info,
+}
+
+#[derive(Debug, Subcommand)]
+enum Info {
+    Info {
+        #[clap(flatten)]
+        report: Report,
+    },
+}
+
+#[derive(Debug, Parser)]
 struct Report {
-    flags: Vec<Flag>,
+    #[clap(long, short)]
+    /// Report documentation URL
+    documentation: bool,
+    #[clap(long, short = 'D')]
+    /// Report number of crate downloads
+    downloads: bool,
+    #[clap(long, short = 'H')]
+    /// Report crate homepage URL
+    homepage: bool,
+    #[clap(long, short)]
+    /// Report crate repository URL
+    repository: bool,
+    #[clap(long, short)]
+    /// Report more details
     verbose: bool,
-    json: bool,
+    #[clap(long, short = 'V', parse(from_occurrences))]
+    /// Report version history of the crate (5 last versions), twice for full history
     versions: usize,
-    keywords: bool,
+    #[clap(name = "crate", required = true)]
+    /// crates to report
+    crates: Vec<String>,
 }
 
 impl Report {
-    pub fn new(info: &ArgMatches) -> Self {
-        let mut flags: Vec<Flag> = vec![];
-        if info.is_present("repository") {
-            flags.push(Flag::Repository);
-        }
-        if info.is_present("documentation") {
-            flags.push(Flag::Documentation);
-        }
-        if info.is_present("downloads") {
-            flags.push(Flag::Downloads);
-        }
-        if info.is_present("homepage") {
-            flags.push(Flag::Homepage);
-        }
+    fn report(&self) -> anyhow::Result<()> {
+        let client = SyncClient::new(
+            "cargo-info (cargo-info@mountall.com)",
+            Duration::from_millis(10),
+        )?;
+        self.crates
+            .iter()
+            .map(|krate| client.get_crate(krate))
+            .collect::<Result<Vec<_>, _>>()?
+            .into_iter()
+            .for_each(|krate| self.report_crate(krate));
 
-        if flags.is_empty() {
-            flags.push(Flag::Default);
-        }
-
-        let versions = match info.occurrences_of("versions") {
-            0 => 0,                  // No flags - nothing to do
-            1 => 5,                  // Single -V - show 5 last versions
-            _ => usize::max_value(), // All the other cases - show everything
-        };
-
-        Report {
-            flags,
-            verbose: info.is_present("verbose"),
-            json: info.is_present("json"),
-            versions,
-            keywords: info.is_present("keywords"),
-        }
+        Ok(())
     }
 
-    pub fn report(&self, name: &str) -> Result<String, errors::Error> {
-        let response = try!(query(name));
-        let mut output = String::new();
-
-        if self.json {
-            output = output + &self.report_json(&response);
-        } else if let Some(krate) = get_crate(&response) {
-            if self.versions > 0 {
-                output = output + &self.report_versions(&krate, self.versions);
-            } else if self.keywords {
-                output = output + &self.report_keywords(&krate);
-            } else {
-                output = output + &self.report_crate(&krate);
-            }
-        };
-        Ok(output)
-    }
-
-    pub fn report_json(&self, response: &Response) -> String {
-        let mut output = String::new();
-        if self.verbose {
-            if let Ok(json) = response.json() {
-                output = output + &format!("{:#}", json);
-            }
-        } else if let Some(json) = response.text() {
-            output += json;
+    fn report_crate(&self, krate: CrateResponse) {
+        let mut default = true;
+        if self.documentation {
+            default = false;
+            println!("{}", krate.documentation());
         }
-        output
-    }
 
-    pub fn report_crate(&self, krate: &crates::Crate) -> String {
-        let mut output = String::new();
-        for flag in &self.flags {
-            output = output
-                + &match *flag {
-                    Flag::Repository => krate.print_repository(self.verbose),
-                    Flag::Documentation => krate.print_documentation(self.verbose),
-                    Flag::Downloads => krate.print_downloads(self.verbose),
-                    Flag::Homepage => krate.print_homepage(self.verbose),
-                    Flag::Default => reportv(krate, self.verbose),
-                }
+        if self.downloads {
+            default = false;
+            println!("{}", krate.downloads());
         }
-        output
-    }
 
-    pub fn report_versions(&self, krate: &crates::Crate, limit: usize) -> String {
-        if limit > 0 {
-            krate.print_last_versions(limit, self.verbose)
-        } else {
-            String::new()
+        if self.homepage {
+            default = false;
+            println!("{}", krate.homepage());
         }
+
+        if self.repository {
+            default = false;
+            println!("{}", krate.repository());
+        }
+
+        if self.versions > 0 {
+            default = false;
+            println!(
+                "{}",
+                print_last_versions(krate.versions(), self.version_limit(), self.verbose)
+            );
+        }
+
+        if default {
+            display_crate(krate, 5, self.verbose);
+        }
+
+        println!();
     }
 
-    pub fn report_keywords(&self, krate: &crates::Crate) -> String {
-        krate.print_keywords(self.verbose)
+    fn version_limit(&self) -> usize {
+        match self.versions {
+            0 => 0,
+            1 => 5,
+            _ => usize::MAX,
+        }
     }
 }
 
-fn reportv(krate: &crates::Crate, verbose: bool) -> String {
+fn display_crate(krate: CrateResponse, limit: usize, verbose: bool) {
+    let width = 16;
+    let name = format!("{:<width$}{}", "Crate:", krate.name());
+    let version = format!("{:<width$}{}", "Version:", krate.max_version());
+    let description = format!("{:<width$}{}", "Description:", krate.description());
+    let downloads = format!("{:<16}{}", "Downloads:", krate.downloads());
+    let homepage = format!("{:<width$}{}", "Homepage:", krate.homepage());
+    let documentation = format!("{:<width$}{}", "Documentation:", krate.documentation());
+    let repository = format!("{:<width$}{}", "Repository:", krate.repository());
+    let license = format!("{:<width$}{}", "License:", krate.license());
+    let created = krate.created_at();
+    let created_at = format!("{:<width$}{} ({:#})", "Created:", created, created);
+    let updated = krate.updated_at();
+    let updated_at = format!("{:<width$}{} ({:#})", "Updated:", updated, updated);
+    let keywords = format!("{:<width$}{:?}", "Keywords:", krate.keywords());
     if verbose {
-        format!("{:#}", krate)
+        println!("{name}\n{version}\n{description}\n{downloads}\n{homepage}\n{documentation}\n{repository}\n{license}\n{keywords}\n{created_at}\n{updated_at}");
     } else {
-        format!("{}", krate)
-    }
-}
-
-fn query(krate: &str) -> requests::Result {
-    Request::json().get(&format!("https://crates.io/api/v1/crates/{}", krate))
-}
-
-fn get_crate(response: &Response) -> Option<crates::Crate> {
-    response.json().ok().map(|k| crates::Crate::new(&k))
-}
-
-// fn debug<T>(item: &T)
-//     where T: fmt::Debug
-// {
-//     println!("{:#?}", item);
-// }
-
-fn print_report<T>(r: Result<T, errors::Error>)
-where
-    T: fmt::Display,
-{
-    match r {
-        Ok(text) => println!("\n{}\n", text),
-        Err(err) => println!("\n{}\n", err),
-    }
-}
-
-fn main() {
-    Pager::new().setup();
-
-    let matches = App::new(CARGO)
-        .bin_name(CARGO)
-        .author(crate_authors!())
-        .version(crate_version!())
-        .about("Query crates.io registry for crates details")
-        .setting(AppSettings::GlobalVersion)
-        .setting(AppSettings::VersionlessSubcommands)
-        .setting(AppSettings::SubcommandRequiredElseHelp)
-        .subcommand(SubCommand::with_name("info")
-            .setting(AppSettings::ArgRequiredElseHelp)
-            .setting(AppSettings::TrailingVarArg)
-            .arg(Arg::with_name("documentation")
-                .short("d")
-                .long("documentation")
-                .help("Report documentation URL"))
-            .arg(Arg::with_name("downloads")
-                .short("D")
-                .long("downloads")
-                .help("Report number of crate downloads"))
-            .arg(Arg::with_name("homepage")
-                .short("H")
-                .long("homepage")
-                .help("Report home page URL"))
-            .arg(Arg::with_name("repository")
-                .short("r")
-                .long("repository")
-                .help("Report crate repository URL"))
-            .arg(Arg::with_name("json")
-                .short("j")
-                .long("json")
-                .help("Report raw JSON data from crates.io")
-                .conflicts_with_all(&["documentation", "downloads", "homepage", "repository"]))
-            .arg(Arg::with_name("verbose")
-                .short("v")
-                .long("verbose")
-                .help("Report more details"))
-            .arg(Arg::with_name("versions")
-                .short("V")
-                .long("versions")
-                .multiple(true)
-                .help("Report version history of the crate (5 last versions), twice for full \
-                       history"))
-            .arg_from_usage("<crate>... 'crate to query'"))
-        .get_matches();
-
-    if let Some(info) = matches.subcommand_matches("info") {
-        if let Some(crates) = info.values_of("crate") {
-            let rep = Report::new(info);
-            for krate in crates {
-                // debug(&krate);
-                print_report(rep.report(krate));
+        let mut text = String::new();
+        for line in print_last_versions(krate.versions(), limit, false).lines() {
+            text += "\n";
+            if !line.is_empty() {
+                text = text + "  " + line;
             }
         }
+        println!(
+            "{name}\n{version}\n{description}\n{downloads}\n{homepage}\n{documentation}\n{repository}\n{updated_at}\n{}",
+            format_args!("{:<16}\n{}", "Version history:", text)
+        )
     }
+}
+
+fn print_last_versions(versions: &[Version], limit: usize, verbose: bool) -> String {
+    let text = format!("{:<11}{:<#16}{:<11}\n", "VERSION", "RELEASED", "DOWNLOADS");
+
+    if verbose {
+        // Consider adding some more useful information in verbose mode
+    }
+
+    let text = versions.iter().take(limit).fold(text, |text, version| {
+        format!("{text}\n{}", print_version(version, verbose))
+    });
+
+    let length = versions.len();
+    if limit < length {
+        format!("{text}\n\n... use -VV to show all {length} versions\n")
+    } else {
+        text
+    }
+}
+
+fn print_version(version: &Version, _verbose: bool) -> String {
+    let created = HumanTime::from(version.created_at);
+    let yanked = if version.yanked { "\t\t(yanked)" } else { "" };
+    format!(
+        "{:<11}{:<16}{:<11}{yanked}",
+        version.num, created, version.downloads
+    )
+
+    // Consider adding some more useful information in verbose mode
 }
