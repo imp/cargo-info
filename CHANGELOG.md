@@ -1,3 +1,7 @@
+## 0.6.1 - 2022-04-28
+
+Cleanup
+
 ## 0.6.0 - 2022-04-28
 
 Rewrite of the entire codebase
