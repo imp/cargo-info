@@ -1,3 +1,7 @@
+## 0.7.0 - 2022-05-16
+
+Add reporting features with -v and/or -f
+
 ## 0.6.1 - 2022-04-28
 
 Cleanup
