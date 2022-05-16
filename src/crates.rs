@@ -18,6 +18,7 @@ pub(super) trait CrateResponseExt {
     fn created_at(&self) -> TimeStamp;
     fn updated_at(&self) -> TimeStamp;
     fn show_keywords(&self) -> String;
+    fn show_features(&self, verbose: bool) -> String;
 }
 
 #[derive(Debug)]
@@ -94,5 +95,25 @@ impl CrateResponseExt for CrateResponse {
             .as_deref()
             .unwrap_or_default()
             .join(", ")
+    }
+
+    fn show_features(&self, verbose: bool) -> String {
+        if let Some(features) = self.versions.first().map(|version| &version.features) {
+            if verbose {
+                features
+                    .iter()
+                    .map(|(feature, deps)| format!("{feature}: {}", deps.join(", ")))
+                    .collect::<Vec<_>>()
+                    .join("\n")
+            } else {
+                features
+                    .keys()
+                    .map(ToString::to_string)
+                    .collect::<Vec<_>>()
+                    .join(", ")
+            }
+        } else {
+            String::new()
+        }
     }
 }

@@ -64,6 +64,9 @@ struct Report {
     #[clap(long, short = 'V', parse(from_occurrences))]
     /// Report version history of the crate (5 last versions), twice for full history
     versions: usize,
+    #[clap(long, short)]
+    /// Report crate features
+    features: bool,
     #[clap(name = "crate", required = true)]
     /// crates to report
     crates: Vec<String>,
@@ -115,6 +118,11 @@ impl Report {
             );
         }
 
+        if self.features {
+            default = false;
+            println!("{}", krate.show_features(self.verbose));
+        }
+
         if default {
             display_crate(krate, 5, self.verbose);
         }
@@ -146,8 +154,9 @@ fn display_crate(krate: CrateResponse, limit: usize, verbose: bool) {
     let updated = krate.updated_at();
     let updated_at = format!("{:<width$}{} ({:#})", "Updated:", updated, updated);
     let keywords = format!("{:<width$}{}", "Keywords:", krate.show_keywords());
+    let features = format!("{:<width$}{}", "Features:", krate.show_features(false));
     if verbose {
-        println!("{name}\n{version}\n{description}\n{downloads}\n{homepage}\n{documentation}\n{repository}\n{license}\n{keywords}\n{created_at}\n{updated_at}");
+        println!("{name}\n{version}\n{description}\n{downloads}\n{homepage}\n{documentation}\n{repository}\n{license}\n{features}\n{keywords}\n{created_at}\n{updated_at}");
     } else {
         let mut text = String::new();
         for line in print_last_versions(krate.versions(), limit, false).lines() {
