@@ -145,7 +145,7 @@ fn display_crate(krate: CrateResponse, limit: usize, verbose: bool) {
     let created_at = format!("{:<width$}{} ({:#})", "Created:", created, created);
     let updated = krate.updated_at();
     let updated_at = format!("{:<width$}{} ({:#})", "Updated:", updated, updated);
-    let keywords = format!("{:<width$}{:?}", "Keywords:", krate.keywords());
+    let keywords = format!("{:<width$}{}", "Keywords:", krate.show_keywords());
     if verbose {
         println!("{name}\n{version}\n{description}\n{downloads}\n{homepage}\n{documentation}\n{repository}\n{license}\n{keywords}\n{created_at}\n{updated_at}");
     } else {

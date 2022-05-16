@@ -17,6 +17,7 @@ pub(super) trait CrateResponseExt {
     fn versions(&self) -> &[Version];
     fn created_at(&self) -> TimeStamp;
     fn updated_at(&self) -> TimeStamp;
+    fn show_keywords(&self) -> String;
 }
 
 #[derive(Debug)]
@@ -85,5 +86,13 @@ impl CrateResponseExt for CrateResponse {
 
     fn updated_at(&self) -> TimeStamp {
         TimeStamp(self.crate_data.updated_at)
+    }
+
+    fn show_keywords(&self) -> String {
+        self.crate_data
+            .keywords
+            .as_deref()
+            .unwrap_or_default()
+            .join(", ")
     }
 }
