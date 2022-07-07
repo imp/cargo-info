@@ -25,12 +25,20 @@ pub(super) trait CrateResponseExt {
 #[derive(Debug)]
 pub(super) struct TimeStamp(DateTime<Utc>);
 
+impl TimeStamp {
+    const FORMAT: &'static str = "%c";
+}
+
 impl fmt::Display for TimeStamp {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         if f.alternate() {
-            f.pad(&format!("{}", HumanTime::from(self.0)))
+            f.pad(&format!(
+                "{}    ({})",
+                self.0.naive_local().format(Self::FORMAT),
+                HumanTime::from(self.0),
+            ))
         } else {
-            f.pad(&format!("{}", self.0.naive_local()))
+            f.pad(&format!("{}", self.0.naive_local().format(Self::FORMAT)))
         }
     }
 }

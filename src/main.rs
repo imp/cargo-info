@@ -149,10 +149,8 @@ fn display_crate(krate: CrateResponse, limit: usize, verbose: bool) {
     let documentation = format!("{:<width$}{}", "Documentation:", krate.documentation());
     let repository = format!("{:<width$}{}", "Repository:", krate.repository());
     let license = format!("{:<width$}{}", "License:", krate.license());
-    let created = krate.created_at();
-    let created_at = format!("{:<width$}{} ({:#})", "Created:", created, created);
-    let updated = krate.updated_at();
-    let updated_at = format!("{:<width$}{} ({:#})", "Updated:", updated, updated);
+    let created_at = format!("{:<width$}{:#}", "Created:", krate.created_at());
+    let updated_at = format!("{:<width$}{:#}", "Updated:", krate.updated_at());
     let keywords = format!("{:<width$}{}", "Keywords:", krate.show_keywords());
     let features = format!("{:<width$}{}", "Features:", krate.show_features(false));
     if verbose {
