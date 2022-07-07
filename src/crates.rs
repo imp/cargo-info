@@ -19,6 +19,7 @@ pub(super) trait CrateResponseExt {
     fn updated_at(&self) -> TimeStamp;
     fn show_keywords(&self) -> String;
     fn show_features(&self, verbose: bool) -> String;
+    fn max_version_detailed(&self) -> Option<&Version>;
 }
 
 #[derive(Debug)]
@@ -52,7 +53,14 @@ impl CrateResponseExt for CrateResponse {
     }
 
     fn license(&self) -> &str {
-        self.crate_data.license.as_deref().unwrap_or_default()
+        self.crate_data
+            .license
+            .as_deref()
+            .or_else(|| {
+                self.max_version_detailed()
+                    .and_then(|v| v.license.as_deref())
+            })
+            .unwrap_or_default()
     }
 
     fn max_version(&self) -> &str {
@@ -115,5 +123,11 @@ impl CrateResponseExt for CrateResponse {
         } else {
             String::new()
         }
+    }
+
+    fn max_version_detailed(&self) -> Option<&Version> {
+        self.versions
+            .iter()
+            .find(|v| v.num == self.crate_data.max_version)
     }
 }
