@@ -1,3 +1,7 @@
+## 0.7.1 - 2022-07-07
+
+Fix reporting license
+
 ## 0.7.0 - 2022-05-16
 
 Add reporting features with -v and/or -f
