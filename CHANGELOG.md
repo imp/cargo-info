@@ -1,3 +1,7 @@
+## 0.7.2 - 2022-07-07
+
+Use fmtools for rendering output
+
 ## 0.7.1 - 2022-07-07
 
 Fix reporting license
