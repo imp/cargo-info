@@ -31,15 +31,13 @@ impl TimeStamp {
 
 impl fmt::Display for TimeStamp {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        if f.alternate() {
-            f.pad(&format!(
-                "{}    ({})",
-                self.0.naive_local().format(Self::FORMAT),
-                HumanTime::from(self.0),
-            ))
-        } else {
-            f.pad(&format!("{}", self.0.naive_local().format(Self::FORMAT)))
-        }
+        let text = fmtools::format!(
+            {self.0.naive_local().format(Self::FORMAT)}
+            if f.alternate() {
+                "    (" {HumanTime::from(self.0)} ")"
+            }
+        );
+        f.pad(&text)
     }
 }
 
@@ -106,31 +104,28 @@ impl CrateResponseExt for CrateResponse {
     }
 
     fn show_keywords(&self) -> String {
-        self.crate_data
-            .keywords
-            .as_deref()
-            .unwrap_or_default()
-            .join(", ")
+        fmtools::join(", ", self.keywords()).to_string()
     }
 
     fn show_features(&self, verbose: bool) -> String {
-        if let Some(features) = self.versions.first().map(|version| &version.features) {
+        fmtools::format!(if let Some(features) =
+            self.versions.first().map(|version| &version.features)
+        {
             if verbose {
-                features
-                    .iter()
-                    .map(|(feature, deps)| format!("{feature}: {}", deps.join(", ")))
-                    .collect::<Vec<_>>()
-                    .join("\n")
+                let features = features.iter().map(|(feature, deps)| {
+                    fmtools::format!(
+                        {feature} ": " {fmtools::join(", ", deps)}
+                    )
+                });
+                {
+                    fmtools::join("\n", features)
+                }
             } else {
-                features
-                    .keys()
-                    .map(ToString::to_string)
-                    .collect::<Vec<_>>()
-                    .join(", ")
+                {
+                    fmtools::join(", ", features.keys())
+                }
             }
-        } else {
-            String::new()
-        }
+        })
     }
 
     fn max_version_detailed(&self) -> Option<&Version> {

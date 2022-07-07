@@ -20,6 +20,7 @@ chrono = "0.4"
 chrono-humanize = "0.2"
 clap = { version = "3.1", features = ["derive"] }
 crates_io_api = { version = "0.8", default-features = false }
+fmtools = "0.1"
 
 [features]
 default = ["crates_io_api/default"]

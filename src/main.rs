@@ -92,39 +92,38 @@ impl Report {
         let mut default = true;
         if self.documentation {
             default = false;
-            println!("{}", krate.documentation());
+            fmtools::println!({ krate.documentation() });
         }
 
         if self.downloads {
             default = false;
-            println!("{}", krate.downloads());
+            fmtools::println!({ krate.downloads() });
         }
 
         if self.homepage {
             default = false;
-            println!("{}", krate.homepage());
+            fmtools::println!({ krate.homepage() });
         }
 
         if self.repository {
             default = false;
-            println!("{}", krate.repository());
+            fmtools::println!({ krate.repository() });
         }
 
         if self.versions > 0 {
             default = false;
-            println!(
-                "{}",
-                print_last_versions(krate.versions(), self.version_limit(), self.verbose)
-            );
+            fmtools::println!({
+                print_last_versions(krate.versions(), self.version_limit(), None, self.verbose)
+            });
         }
 
         if self.features {
             default = false;
-            println!("{}", krate.show_features(self.verbose));
+            fmtools::println!({ krate.show_features(self.verbose) });
         }
 
         if default {
-            display_crate(krate, 5, self.verbose);
+            show_crate(krate, 5, self.verbose);
         }
 
         println!();
@@ -139,62 +138,60 @@ impl Report {
     }
 }
 
-fn display_crate(krate: CrateResponse, limit: usize, verbose: bool) {
-    let width = 16;
-    let name = format!("{:<width$}{}", "Crate:", krate.name());
-    let version = format!("{:<width$}{}", "Version:", krate.max_version());
-    let description = format!("{:<width$}{}", "Description:", krate.description());
-    let downloads = format!("{:<16}{}", "Downloads:", krate.downloads());
-    let homepage = format!("{:<width$}{}", "Homepage:", krate.homepage());
-    let documentation = format!("{:<width$}{}", "Documentation:", krate.documentation());
-    let repository = format!("{:<width$}{}", "Repository:", krate.repository());
-    let license = format!("{:<width$}{}", "License:", krate.license());
-    let created_at = format!("{:<width$}{:#}", "Created:", krate.created_at());
-    let updated_at = format!("{:<width$}{:#}", "Updated:", krate.updated_at());
-    let keywords = format!("{:<width$}{}", "Keywords:", krate.show_keywords());
-    let features = format!("{:<width$}{}", "Features:", krate.show_features(false));
-    if verbose {
-        println!("{name}\n{version}\n{description}\n{downloads}\n{homepage}\n{documentation}\n{repository}\n{license}\n{features}\n{keywords}\n{created_at}\n{updated_at}");
-    } else {
-        let mut text = String::new();
-        for line in print_last_versions(krate.versions(), limit, false).lines() {
-            text += "\n";
-            if !line.is_empty() {
-                text = text + "  " + line;
-            }
+fn show_crate(krate: CrateResponse, limit: usize, verbose: bool) {
+    // let width = 16;
+    fmtools::println!(
+        if verbose {
+            {"Crate:":<16}{krate.name()} "\n"
+            {"Version:":<16}{krate.max_version()} "\n"
+            {"Description:":<16}{krate.description()} "\n"
+            {"Downloads:":<16}{krate.downloads()} "\n"
+            {"Homepage:":<16}{krate.homepage()} "\n"
+            {"Documentation:":<16}{krate.documentation()} "\n"
+            {"Repository:":<16}{krate.repository()} "\n"
+            {"License:":<16}{krate.license()} "\n"
+            {"Features:":<16}{krate.show_features(false)} "\n"
+            {"Keywords:":<16}{krate.show_keywords()} "\n"
+            {"Created:":<16}{krate.created_at():#} "\n"
+            {"Updated:":<16}{krate.updated_at():#}
+        } else {
+            {"Crate:":<16}{krate.name()} "\n"
+            {"Version:":<16}{krate.max_version()} "\n"
+            {"Description:":<16}{krate.description()} "\n"
+            {"Downloads:":<16}{krate.downloads()} "\n"
+            {"Homepage:":<16}{krate.homepage()} "\n"
+            {"Documentation:":<16}{krate.documentation()} "\n"
+            {"Repository:":<16}{krate.repository()} "\n"
+            {"Updated:":<16}{krate.updated_at():#} "\n"
+            {"Version history:":<16} "\n\n"
+            {print_last_versions(krate.versions(), limit, "  ", false)}
         }
-        println!(
-            "{name}\n{version}\n{description}\n{downloads}\n{homepage}\n{documentation}\n{repository}\n{updated_at}\n{}",
-            format_args!("{:<16}\n{}", "Version history:", text)
-        )
-    }
+    )
 }
 
-fn print_last_versions(versions: &[Version], limit: usize, verbose: bool) -> String {
-    let text = format!("{:<11}{:<#16}{:<11}\n", "VERSION", "RELEASED", "DOWNLOADS");
-
-    if verbose {
-        // Consider adding some more useful information in verbose mode
-    }
-
-    let text = versions.iter().take(limit).fold(text, |text, version| {
-        format!("{text}\n{}", print_version(version, verbose))
-    });
-
-    let length = versions.len();
-    if limit < length {
-        format!("{text}\n\n... use -VV to show all {length} versions\n")
-    } else {
-        text
-    }
-}
-
-fn print_version(version: &Version, _verbose: bool) -> String {
-    let created = HumanTime::from(version.created_at);
-    let yanked = if version.yanked { "\t\t(yanked)" } else { "" };
-    format!(
-        "{:<11}{:<16}{:<11}{yanked}",
-        version.num, created, version.downloads
+fn print_last_versions<'a>(
+    versions: &[Version],
+    limit: usize,
+    prefix: impl Into<Option<&'a str>>,
+    _verbose: bool,
+) -> String {
+    let prefix = prefix.into().unwrap_or_default();
+    fmtools::format!(
+        {prefix}{"VERSION":<11}{"RELEASED":<16}{"DOWNLOADS":<11}"\n\n"
+        for version in versions.iter().take(limit) {
+            let created = HumanTime::from(version.created_at);
+            {prefix}{version.num:<11}{created:<16}{version.downloads:<11}
+            if version.yanked {
+                "\t\t(yanked)"
+            }
+            "\n"
+        }
+        let length = versions.len();
+        if limit < length {
+            "\n"
+            {prefix}
+            "... use -VV to show all "{length}" versions"
+        }
     )
 
     // Consider adding some more useful information in verbose mode
