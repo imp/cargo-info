@@ -176,11 +176,19 @@ fn print_last_versions<'a>(
     _verbose: bool,
 ) -> String {
     let prefix = prefix.into().unwrap_or_default();
+    let version_width = versions
+        .iter()
+        .take(limit)
+        .map(|v| v.num.len())
+        .max()
+        .unwrap_or(0);
+    // Make sure the column header is taken into account and add a gutter.
+    let version_width = std::cmp::max(version_width, "VERSION".len()) + 2;
     fmtools::format!(
-        {prefix}{"VERSION":<11}{"RELEASED":<16}{"DOWNLOADS":<11}"\n\n"
+        {prefix}{"VERSION",version_width:<1$}{"RELEASED":<16}{"DOWNLOADS":<11}"\n\n"
         for version in versions.iter().take(limit) {
             let created = HumanTime::from(version.created_at);
-            {prefix}{version.num:<11}{created:<16}{version.downloads:<11}
+            {prefix}{version.num,version_width:<1$}{created:<16}{version.downloads:<11}
             if version.yanked {
                 "\t\t(yanked)"
             }
