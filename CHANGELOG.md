@@ -1,4 +1,8 @@
-## 0.7.5 - 2023-07-xx
+## 0.7.6 - 2023-07-23
+
+Avoid pulling in time 0.1 via chrono
+
+## 0.7.5 - 2023-07-23
 
 Pull up clap to 0.4
 
