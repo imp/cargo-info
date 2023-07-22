@@ -46,28 +46,28 @@ enum Info {
 
 #[derive(Debug, Parser)]
 struct Report {
-    #[clap(long, short)]
+    #[arg(long, short)]
     /// Report documentation URL
     documentation: bool,
-    #[clap(long, short = 'D')]
+    #[arg(long, short = 'D')]
     /// Report number of crate downloads
     downloads: bool,
-    #[clap(long, short = 'H')]
+    #[arg(long, short = 'H')]
     /// Report crate homepage URL
     homepage: bool,
-    #[clap(long, short)]
+    #[arg(long, short)]
     /// Report crate repository URL
     repository: bool,
-    #[clap(long, short)]
+    #[arg(long, short)]
     /// Report more details
     verbose: bool,
-    #[clap(long, short = 'V', action = clap::ArgAction::Count)]
+    #[arg(long, short = 'V', action = clap::ArgAction::Count)]
     /// Report version history of the crate (5 last versions), twice for full history
     versions: u8,
-    #[clap(long, short)]
+    #[arg(long, short)]
     /// Report crate features
     features: bool,
-    #[clap(name = "crate", required = true)]
+    #[arg(id = "crate", required = true)]
     /// crates to report
     crates: Vec<String>,
 }
