@@ -61,9 +61,9 @@ struct Report {
     #[clap(long, short)]
     /// Report more details
     verbose: bool,
-    #[clap(long, short = 'V', parse(from_occurrences))]
+    #[clap(long, short = 'V', action = clap::ArgAction::Count)]
     /// Report version history of the crate (5 last versions), twice for full history
-    versions: usize,
+    versions: u8,
     #[clap(long, short)]
     /// Report crate features
     features: bool,
