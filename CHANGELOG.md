@@ -1,3 +1,7 @@
+## 0.7.5 - 2023-07-xx
+
+Pull up clap to 0.4
+
 ## 0.7.4 - 2023-07-22
 
 Update dependencies
