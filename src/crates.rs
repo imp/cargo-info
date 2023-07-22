@@ -59,13 +59,8 @@ impl CrateResponseExt for CrateResponse {
     }
 
     fn license(&self) -> &str {
-        self.crate_data
-            .license
-            .as_deref()
-            .or_else(|| {
-                self.max_version_detailed()
-                    .and_then(|v| v.license.as_deref())
-            })
+        self.max_version_detailed()
+            .and_then(|v| v.license.as_deref())
             .unwrap_or_default()
     }
 
