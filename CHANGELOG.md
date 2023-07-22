@@ -1,3 +1,11 @@
+## 0.7.4 - 2023-07-22
+
+Update dependencies
+
+## 0.7.3 - 2022-09-03
+
+Account for longer than usual version strings
+
 ## 0.7.2 - 2022-07-07
 
 Use fmtools for rendering output
