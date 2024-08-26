@@ -25,3 +25,4 @@ fmtools = "0.1"
 [features]
 default = ["crates_io_api/default"]
 rustls = ["crates_io_api/rustls"]
+pedantic = []
